@@ -1,0 +1,67 @@
+{
+  "name": "@bitshard.io/bitshard-sdk",
+  "version": "0.0.1",
+  "description": "BitShard MPC SDK for distributed key generation and threshold signatures",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "test-sdk.js"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mpc",
+    "threshold-signatures",
+    "dkls",
+    "distributed-key-generation",
+    "wallet",
+    "crypto",
+    "bitcoin",
+    "ethereum",
+    "arbitrum"
+  ],
+  "author": "bitshard.io",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bitshard-io/bitshard-sdk"
+  },
+  "dependencies": {
+    "@silencelaboratories/dkls-wasm-ll-node": "^1.2.0",
+    "bitcoinjs-lib": "^6.1.5",
+    "ethers": "^5.8.0",
+    "viem": "^2.7.0",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.10.5",
+    "@types/ws": "^8.5.10",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "@silencelaboratories/dkls-wasm-ll-web": "^1.2.0"
+  },
+  "peerDependenciesMeta": {
+    "@silencelaboratories/dkls-wasm-ll-web": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}
