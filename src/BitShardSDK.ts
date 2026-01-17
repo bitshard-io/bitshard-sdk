@@ -156,7 +156,7 @@ export class BitShardSDK {
     async personalSign(
         message: string,
         keyshares: Keyshare[],
-        options: { threshold?: number; publicKey?: string } = {}
+        options: { threshold?: number; publicKey: string }
     ): Promise<SignatureResult> {
         // Prepare message with EIP-191 prefix
         const messageBytes = Buffer.from(message, 'utf8');
@@ -170,7 +170,7 @@ export class BitShardSDK {
         const { keccak256 } = require('viem');
         const messageHash = Buffer.from(keccak256(prefixedMessage).slice(2), 'hex');
 
-        // Sign with DKLS (pass public key if available for v calculation)
+        // Sign with DKLS (public key required for v calculation)
         const threshold = options.threshold ?? keyshares.length;
         const publicKey = options.publicKey;
 

@@ -47,8 +47,9 @@ console.log('Bitcoin address:', addresses.bitcoin);
 
 // Sign a message
 const message = 'Hello BitShard!';
-const signature = await sdk.personalSign(message, wallet.keyshares, { 
-  threshold: 2 
+const signature = await sdk.personalSign(message, wallet.keyshares, {
+  threshold: 2,
+  publicKey: wallet.publicKey
 });
 ```
 

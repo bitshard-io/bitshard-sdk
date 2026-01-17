@@ -50,7 +50,7 @@ class BitShardSDK {
     createLocalWallet(config): Promise<LocalWallet>
     
     // Signature Operations
-    personalSign(message, keyshares, options): Promise<SignatureResult>
+    personalSign(message, keyshares, options): Promise<SignatureResult> // options.publicKey required
     personalSignWithWallet(message, wallet, options): Promise<SignatureResult>
     signHash(hash, keyshares, options): Promise<SignatureResult>
     signTransactionWithWallet(hash, wallet, options): Promise<SignatureResult>

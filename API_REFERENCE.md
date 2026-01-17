@@ -89,7 +89,7 @@ async personalSign(
   keyshares: Keyshare[],
   options: {
     threshold?: number;
-    publicKey?: string;  // For v calculation
+    publicKey: string;  // Required for v calculation
   }
 ): Promise<SignatureResult>
 ```
