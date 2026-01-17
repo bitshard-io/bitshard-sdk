@@ -78,6 +78,30 @@ export class BitShardSDK {
     }
 
     /**
+     * Serialize keyshares (WASM objects) to base64 array for storage
+     * @param keyshares Array of Keyshare WASM objects
+     * @returns Array of base64-encoded strings
+     */
+    static serializeKeyshares(keyshares: Keyshare[]): string[] {
+        return keyshares.map(ks => {
+            const bytes = ks.toBytes();
+            return Buffer.from(bytes).toString('base64');
+        });
+    }
+
+    /**
+     * Deserialize base64 array back to Keyshare WASM objects
+     * @param serialized Array of base64-encoded strings
+     * @returns Array of Keyshare WASM objects
+     */
+    static deserializeKeyshares(serialized: string[]): Keyshare[] {
+        return serialized.map(b64 => {
+            const bytes = new Uint8Array(Buffer.from(b64, 'base64'));
+            return Keyshare.fromBytes(bytes);
+        });
+    }
+
+    /**
      * Create a party for distributed setup
      * @param config Party configuration
      * @returns DKLS party instance
