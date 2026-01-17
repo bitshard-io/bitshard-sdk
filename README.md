@@ -93,8 +93,6 @@ The SDK is organized into several modules:
 
 Reusing pre-signatures will expose your private key. The SDK includes built-in protection against pre-signature reuse, but developers must ensure proper handling in their applications.
 
-See [SECURITY.md](./SECURITY.md) for detailed security considerations.
-
 ## Documentation
 
 - [Architecture Design](./ARCHITECTURE_DESIGN.md)
