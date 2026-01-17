@@ -117,6 +117,96 @@ MIT
 
 Contributions are welcome! Please read our contributing guidelines and submit pull requests to our repository.
 
+# Releasing new version guide
+
+This document describes the standard release process for publishing the `@bitshard.io/bitshard-sdk` package.
+
+> **Rule:** Always push commits and tags to GitHub **before** publishing to npm.
+
+---
+
+## Release Steps
+
+### 1. Commit your changes
+
+```bash
+git add .
+git commit -m "feat: describe your change"
+```
+
+---
+
+### 2. Bump version and create a Git tag
+
+Patch release example (`0.0.1` → `0.0.2`):
+
+```bash
+npm version patch
+```
+
+This will:
+- Update `package.json`
+- Create an annotated Git tag (e.g. `v0.0.2`)
+
+---
+
+### 3. Push commits and tags to GitHub
+
+```bash
+git push origin main --follow-tags
+```
+
+This ensures Git is the source of truth before publishing.
+
+---
+
+### 4. Build the package
+
+```bash
+npm run build
+```
+
+Verify:
+- Build output exists (e.g. `dist/`)
+- `package.json` points to built files (`main`, `module`, `types`)
+
+---
+
+### 5. Publish to npm
+
+```bash
+npm publish --access public
+```
+
+> Scoped packages default to private unless published with `--access public` or `publishConfig.access = "public"`.
+
+---
+
+### 6. Verify release
+
+```bash
+npm view @bitshard.io/bitshard-sdk version
+git tag --list
+```
+
+---
+
+## Release Checklist
+
+- [ ] Changes committed
+- [ ] Version bumped via `npm version`
+- [ ] Commits and tags pushed to GitHub
+- [ ] Build successful
+- [ ] npm publish successful
+
+---
+
+## Notes
+
+- Do not publish to npm without a Git tag
+- Ensure you are authenticated with npm using a publish-capable token (2FA-compliant)
+- Prefer annotated tags for all releases
+
 ## Support
 
-For support, please open an issue on GitHub or contact support@bitshard.io
+For support, please open an issue on GitHub or contact dev@bitshard.io
