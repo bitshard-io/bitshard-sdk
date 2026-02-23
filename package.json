@@ -1,6 +1,6 @@
 {
   "name": "@bitshard.io/bitshard-sdk",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "BitShard MPC SDK for distributed key generation and threshold signatures",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
