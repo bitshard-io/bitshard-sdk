@@ -11,6 +11,7 @@ import type {
     BitcoinConfig
 } from './core/types';
 import { deriveAddresses } from './crypto/addresses';
+import { ALL_CHAINS } from './chains/config';
 
 /**
  * Main SDK class for BitShard MPC operations
@@ -332,104 +333,10 @@ export class BitShardSDK {
         return this.bitcoinConfig;
     }
 
-    /**
-     * Initialize default chain configurations
-     */
     private initializeDefaultChains(): void {
-        // Ethereum
-        this.chains.set('ethereum', {
-            chainId: 1,
-            name: 'Ethereum Mainnet',
-            rpcUrl: 'https://eth.llamarpc.com',
-            explorer: 'https://etherscan.io',
-            nativeCurrency: {
-                name: 'Ether',
-                symbol: 'ETH',
-                decimals: 18
-            }
-        });
-
-        // Arbitrum One
-        this.chains.set('arbitrum-one', {
-            chainId: 42161,
-            name: 'Arbitrum One',
-            rpcUrl: 'https://arb1.arbitrum.io/rpc',
-            explorer: 'https://arbiscan.io',
-            nativeCurrency: {
-                name: 'Ether',
-                symbol: 'ETH',
-                decimals: 18
-            },
-            gasConfig: {
-                maxFeePerGas: '0.1',
-                maxPriorityFeePerGas: '0.01'
-            }
-        });
-
-        // Arbitrum Nova
-        this.chains.set('arbitrum-nova', {
-            chainId: 42170,
-            name: 'Arbitrum Nova',
-            rpcUrl: 'https://nova.arbitrum.io/rpc',
-            explorer: 'https://nova.arbiscan.io',
-            nativeCurrency: {
-                name: 'Ether',
-                symbol: 'ETH',
-                decimals: 18
-            }
-        });
-
-        // Arbitrum Sepolia
-        this.chains.set('arbitrum-sepolia', {
-            chainId: 421614,
-            name: 'Arbitrum Sepolia',
-            rpcUrl: 'https://sepolia-rollup.arbitrum.io/rpc',
-            explorer: 'https://sepolia.arbiscan.io',
-            nativeCurrency: {
-                name: 'Ether',
-                symbol: 'ETH',
-                decimals: 18
-            }
-        });
-
-        // Polygon
-        this.chains.set('polygon', {
-            chainId: 137,
-            name: 'Polygon',
-            rpcUrl: 'https://polygon-rpc.com',
-            explorer: 'https://polygonscan.com',
-            nativeCurrency: {
-                name: 'MATIC',
-                symbol: 'MATIC',
-                decimals: 18
-            }
-        });
-
-        // BNB Smart Chain
-        this.chains.set('bnb', {
-            chainId: 56,
-            name: 'BNB Smart Chain',
-            rpcUrl: 'https://bsc-dataseed.binance.org',
-            explorer: 'https://bscscan.com',
-            nativeCurrency: {
-                name: 'BNB',
-                symbol: 'BNB',
-                decimals: 18
-            }
-        });
-
-        // Avalanche C-Chain
-        this.chains.set('avalanche', {
-            chainId: 43114,
-            name: 'Avalanche C-Chain',
-            rpcUrl: 'https://api.avax.network/ext/bc/C/rpc',
-            explorer: 'https://snowtrace.io',
-            nativeCurrency: {
-                name: 'AVAX',
-                symbol: 'AVAX',
-                decimals: 18
-            }
-        });
+        for (const [name, config] of Object.entries(ALL_CHAINS)) {
+            this.chains.set(name, config);
+        }
     }
 
     /**

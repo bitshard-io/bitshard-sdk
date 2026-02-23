@@ -201,6 +201,12 @@ export interface ChainConfig {
         maxFeePerGas?: string;
         maxPriorityFeePerGas?: string;
     };
+    /** Whether this is a testnet */
+    isTestnet?: boolean;
+    /** Faucet URL for testnets */
+    faucetUrl?: string;
+    /** Alchemy subdomain for API access (e.g. "arb-sepolia") */
+    alchemySubdomain?: string;
 }
 
 /**
