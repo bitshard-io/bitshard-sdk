@@ -6,6 +6,8 @@ BitShard SDK is a TypeScript library for distributed key generation (DKG) and th
 
 - **Distributed Key Generation**: Secure generation of threshold key shares across multiple parties
 - **Threshold Signatures**: Sign transactions with any t-of-n parties
+- **Key Rotation**: Proactively refresh all shares without changing the wallet address
+- **Key Recovery**: Recover lost shares using only the threshold number of surviving parties
 - **Multi-Chain Support**: Native support for Ethereum, Bitcoin, and EVM-compatible chains
 - **WebSocket Coordination**: Real-time protocol coordination between parties
 - **Flexible Configuration**: Support for any n-of-m threshold scheme
@@ -52,6 +54,46 @@ const signature = await sdk.personalSign(message, wallet.keyshares, {
   publicKey: wallet.publicKey
 });
 ```
+
+### Key Rotation
+
+Rotation refreshes every share without changing the public key or wallet addresses.
+All `n` parties must participate.
+
+```typescript
+const dkls = sdk.getDKLSService();
+
+const { newShares, publicKey } = await dkls.refreshShares(wallet.keyshares);
+// publicKey === wallet.publicKey  (same addresses, new secret material)
+```
+
+### Key Recovery
+
+Recovery recreates lost shares using only `t` (threshold) surviving parties.
+The public key and all wallet addresses are preserved.
+
+```typescript
+const dkls = sdk.getDKLSService();
+
+// Party 2 lost their share; parties 0 and 1 still have theirs
+const survivors = [wallet.keyshares[0], wallet.keyshares[1]];
+const lostPartyIds = [2];
+
+const { newShares, publicKey, recoveredPartyIds } =
+  await dkls.recoverShares(survivors, lostPartyIds);
+
+// publicKey === wallet.publicKey
+// newShares has shares for all participants (survivors + recovered)
+// Sign with the recovered shares as usual
+```
+
+**Key differences between rotation and recovery:**
+
+| | Rotation | Recovery |
+|---|---|---|
+| Participants needed | All `n` parties | Only `t` (threshold) survivors |
+| Use case | Proactive security refresh | Lost device / compromised share |
+| Public key | Preserved | Preserved |
 
 ### Distributed Setup (WebSocket Coordination)
 
@@ -107,6 +149,49 @@ See the [examples](./examples) directory for:
 - Multi-party signing
 - Chain-specific transactions
 - Docker deployment
+
+## Testing
+
+### Jest test suite
+
+The automated test suite covers wallet creation, signing, key rotation, key recovery, and recovery input validation (18 tests total).
+
+```bash
+npm run build
+npm test
+```
+
+Test structure:
+
+| Suite | Tests | What it verifies |
+|---|---|---|
+| Basic signing flow | 4 | Wallet creation, address derivation, EIP-191 signing via both `personalSign` and `personalSignWithWallet` |
+| Key rotation | 4 | Public key and address preserved after rotation, share count unchanged, signing with rotated shares |
+| Key recovery | 5 | Public key and address preserved after recovery, correct recovered party IDs, signing with recovered shares |
+| Recovery validation | 5 | Rejects empty survivors, empty lost IDs, insufficient survivors, out-of-range party IDs, overlapping survivor/lost IDs |
+
+### Integration demo (`test-sdk.js`)
+
+The demo script exercises the full MPC lifecycle end-to-end: DKG, signing, key rotation, key recovery, and optionally an on-chain Arbitrum Sepolia transaction.
+
+```bash
+# Run MPC protocol tests only (no network required)
+npm run build
+SKIP_CHAIN_TEST=1 node test-sdk.js
+
+# Run the full demo including Arbitrum Sepolia transaction
+node test-sdk.js
+```
+
+The script walks through:
+
+1. **DKG** -- Creates a 2-of-3 threshold wallet
+2. **Signing** -- Signs a message and verifies the Ethereum address via `ethers.utils.verifyMessage`
+3. **Key Rotation** -- Rotates all shares, verifies key/address stability, signs with rotated shares
+4. **Key Recovery** -- Simulates party 2 losing their share, recovers with parties 0+1, verifies key/address stability, signs with recovered shares
+5. **Arbitrum Sepolia transaction** (optional) -- Signs and broadcasts a real on-chain transaction with a custom data payload
+
+Set `SKIP_CHAIN_TEST=1` to skip step 5 (it requires testnet ETH funding and waits indefinitely for a balance).
 
 ## License
 

@@ -374,6 +374,126 @@ export class DKLSService {
     }
 
     /**
+     * Recover lost shares using threshold survivors while preserving the public key.
+     *
+     * Unlike rotation (which requires all n parties), recovery only needs t (threshold)
+     * surviving parties. The recovering parties get new keyshares and the group public
+     * key is preserved -- same addresses, same wallet.
+     *
+     * @param survivingShares Keyshares held by surviving parties (>= threshold)
+     * @param lostPartyIds Party IDs whose shares were lost and need recovery
+     */
+    async recoverShares(
+        survivingShares: Keyshare[],
+        lostPartyIds: number[]
+    ): Promise<{
+        newShares: Keyshare[];
+        publicKey: string;
+        recoveredPartyIds: number[];
+    }> {
+        try {
+            if (survivingShares.length === 0) {
+                throw new Error('At least one surviving share is required');
+            }
+            if (lostPartyIds.length === 0) {
+                throw new Error('At least one lost party ID is required');
+            }
+
+            const participants = survivingShares[0]!.participants;
+            const threshold = survivingShares[0]!.threshold;
+            const publicKeyBytes = survivingShares[0]!.publicKey;
+            const referencePubHex = Buffer.from(publicKeyBytes).toString('hex');
+
+            for (let i = 1; i < survivingShares.length; i++) {
+                const share = survivingShares[i]!;
+                if (share.participants !== participants || share.threshold !== threshold) {
+                    throw new Error(
+                        `Topology mismatch: share ${i} has ${share.threshold}-of-${share.participants}, ` +
+                        `expected ${threshold}-of-${participants}`
+                    );
+                }
+                const pkHex = Buffer.from(share.publicKey).toString('hex');
+                if (pkHex !== referencePubHex) {
+                    throw new Error(`Public key mismatch on surviving share ${i}`);
+                }
+            }
+
+            if (survivingShares.length < threshold) {
+                throw new Error(
+                    `Insufficient survivors: need at least ${threshold} (threshold), got ${survivingShares.length}`
+                );
+            }
+
+            const uniqueLost = [...new Set(lostPartyIds)].sort((a, b) => a - b);
+            const survivorPartyIds = survivingShares.map(s => s.partyId);
+            for (const id of uniqueLost) {
+                if (id < 0 || id >= participants) {
+                    throw new Error(`Lost party ID ${id} out of range [0, ${participants - 1}]`);
+                }
+                if (survivorPartyIds.includes(id)) {
+                    throw new Error(`Party ${id} is listed as lost but has a surviving share`);
+                }
+            }
+
+            const totalRecoveryParties = survivingShares.length + uniqueLost.length;
+            const lostSharesBytes = new Uint8Array(uniqueLost);
+
+            console.log('🔑 Starting DKLS key recovery...');
+            console.log(`   ${survivingShares.length} surviving parties, ${uniqueLost.length} lost party IDs: [${uniqueLost.join(', ')}]`);
+            console.log(`   Topology: ${threshold}-of-${participants}`);
+
+            const recoveryParties: KeygenSession[] = [];
+
+            for (const share of survivingShares) {
+                recoveryParties.push(KeygenSession.initKeyRecovery(share, lostSharesBytes));
+            }
+
+            for (const lostId of uniqueLost) {
+                recoveryParties.push(
+                    KeygenSession.initLostShareRecovery(
+                        totalRecoveryParties,
+                        threshold,
+                        lostId,
+                        new Uint8Array(publicKeyBytes),
+                        lostSharesBytes
+                    )
+                );
+            }
+
+            console.log(`   ${recoveryParties.length} parties in recovery protocol`);
+            console.log('   Executing key generation protocol for recovery...');
+
+            const newKeyshares = this.executeDKG(recoveryParties);
+
+            if (!newKeyshares.every(ks => ks !== null)) {
+                throw new Error('Key recovery failed: not all parties generated new shares');
+            }
+
+            const recoveredPubHex = Buffer.from(newKeyshares[0]!.publicKey).toString('hex');
+
+            console.log('   Original public key:', referencePubHex.substring(0, 20) + '...');
+            console.log('   Recovered public key:', recoveredPubHex.substring(0, 20) + '...');
+
+            if (recoveredPubHex === referencePubHex) {
+                console.log('   ✅ Public key preserved: addresses remain unchanged');
+            } else {
+                console.log('   ⚠️ Public key changed (unexpected for recovery)');
+            }
+
+            console.log('✅ DKLS key recovery completed successfully');
+
+            return {
+                newShares: newKeyshares,
+                publicKey: '0x' + recoveredPubHex,
+                recoveredPartyIds: uniqueLost
+            };
+        } catch (error) {
+            console.error('❌ DKLS key recovery error:', error);
+            throw new Error(`Failed to recover shares: ${(error as Error).message}`);
+        }
+    }
+
+    /**
      * Filter messages for broadcast (exclude own messages)
      */
     protected filterMessages(msgs: Message[], party: number): Message[] {
