@@ -1,5 +1,7 @@
 import { BitShardSDK } from '../src/BitShardSDK';
 import { Keyshare } from '@silencelaboratories/dkls-wasm-ll-node';
+import { refreshShares } from '../src/protocols/refresh';
+import { recoverShares } from '../src/protocols/recover';
 import { ethers } from 'ethers';
 
 const MESSAGE = 'Hello BitShard!';
@@ -72,7 +74,7 @@ describe('Key rotation (refreshShares)', () => {
         originalPubKey = wallet.publicKey;
         originalEthAddr = sdk.deriveAddresses(originalPubKey).ethereum;
 
-        const result = await sdk.getDKLSService().refreshShares(wallet.keyshares);
+        const result = await refreshShares(sdk.getDKLSService(), wallet.keyshares);
         rotatedShares = result.newShares;
         rotatedPubKey = result.publicKey;
     });
@@ -110,7 +112,7 @@ describe('Key recovery (recoverShares)', () => {
     let wallet: Awaited<ReturnType<BitShardSDK['createLocalWallet']>>;
     let originalPubKey: string;
     let originalEthAddr: string;
-    let recoveryResult: Awaited<ReturnType<BitShardSDK['getDKLSService']>['recoverShares']>;
+    let recoveryResult: Awaited<ReturnType<typeof recoverShares>>;
 
     beforeAll(async () => {
         sdk = new BitShardSDK();
@@ -123,7 +125,7 @@ describe('Key recovery (recoverShares)', () => {
         originalEthAddr = sdk.deriveAddresses(originalPubKey).ethereum;
 
         const survivors = [wallet.keyshares[0], wallet.keyshares[1]];
-        recoveryResult = await sdk.getDKLSService().recoverShares(survivors, [2]);
+        recoveryResult = await recoverShares(sdk.getDKLSService(), survivors, [2]);
     });
 
     it('preserves the public key after recovery', () => {
@@ -176,29 +178,34 @@ describe('Key recovery validation', () => {
     });
 
     it('rejects empty surviving shares', async () => {
-        await expect(sdk.getDKLSService().recoverShares([], [2]))
+        const dkls = sdk.getDKLSService();
+        await expect(recoverShares(dkls, [], [2]))
             .rejects.toThrow('At least one surviving share');
     });
 
     it('rejects empty lost party IDs', async () => {
-        await expect(sdk.getDKLSService().recoverShares(wallet.keyshares, []))
+        const dkls = sdk.getDKLSService();
+        await expect(recoverShares(dkls, wallet.keyshares, []))
             .rejects.toThrow('At least one lost party ID');
     });
 
     it('rejects when survivors < threshold', async () => {
-        await expect(sdk.getDKLSService().recoverShares([wallet.keyshares[0]], [1, 2]))
+        const dkls = sdk.getDKLSService();
+        await expect(recoverShares(dkls, [wallet.keyshares[0]], [1, 2]))
             .rejects.toThrow('Insufficient survivors');
     });
 
     it('rejects out-of-range lost party ID', async () => {
+        const dkls = sdk.getDKLSService();
         const survivors = [wallet.keyshares[0], wallet.keyshares[1]];
-        await expect(sdk.getDKLSService().recoverShares(survivors, [5]))
+        await expect(recoverShares(dkls, survivors, [5]))
             .rejects.toThrow('out of range');
     });
 
     it('rejects lost party ID that has a surviving share', async () => {
+        const dkls = sdk.getDKLSService();
         const survivors = [wallet.keyshares[0], wallet.keyshares[1]];
-        await expect(sdk.getDKLSService().recoverShares(survivors, [0]))
+        await expect(recoverShares(dkls, survivors, [0]))
             .rejects.toThrow('listed as lost but has a surviving share');
     });
 });

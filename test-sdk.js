@@ -55,8 +55,9 @@ async function testSDK() {
         console.log('🔄 KEY ROTATION TEST');
         console.log('='.repeat(60));
 
-        const { Keyshare } = require('./dist/index.js');
+        const { Keyshare, refreshShares, recoverShares } = require('./dist/index.js');
         const crypto = require('crypto');
+        const dkls = sdk.getDKLSService();
 
         const originalPubKey = wallet.publicKey;
         const originalAddr = addresses.ethereum;
@@ -65,7 +66,7 @@ async function testSDK() {
         console.log('   Public key:', originalPubKey.substring(0, 42) + '...');
         console.log('   ETH address:', originalAddr);
 
-        const rotationResult = await sdk.getDKLSService().refreshShares(wallet.keyshares);
+        const rotationResult = await refreshShares(dkls, wallet.keyshares);
 
         console.log('\nAfter rotation:');
         console.log('   Public key:', rotationResult.publicKey.substring(0, 42) + '...');
@@ -116,7 +117,7 @@ async function testSDK() {
         const survivingShares = [rotatedWallet.keyshares[0], rotatedWallet.keyshares[1]];
         const lostPartyIds = [2];
 
-        const recoveryResult = await sdk.getDKLSService().recoverShares(survivingShares, lostPartyIds);
+        const recoveryResult = await recoverShares(dkls, survivingShares, lostPartyIds);
 
         console.log('\nAfter recovery:');
         console.log('   Public key:', recoveryResult.publicKey.substring(0, 42) + '...');
@@ -138,7 +139,7 @@ async function testSDK() {
         }
 
         console.log('\n🖊️ Signing with recovered keys...');
-        const recoveredSig = await sdk.getDKLSService().signMessage(
+        const recoveredSig = await dkls.signMessage(
             new Uint8Array(
                 Buffer.from(
                     ethers.utils.hashMessage(message).slice(2),

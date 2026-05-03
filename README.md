@@ -1,5 +1,8 @@
 # BitShard SDK
 
+[![npm version](https://img.shields.io/npm/v/@bitshard.io/bitshard-sdk.svg)](https://www.npmjs.com/package/@bitshard.io/bitshard-sdk)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 BitShard SDK is a TypeScript library for distributed key generation (DKG) and threshold signatures using the DKLs23 protocol. It enables secure multi-party computation (MPC) wallets with flexible n-of-m threshold configurations.
 
 ## Features
@@ -61,9 +64,14 @@ Rotation refreshes every share without changing the public key or wallet address
 All `n` parties must participate.
 
 ```typescript
+// Via SDK service
 const dkls = sdk.getDKLSService();
-
 const { newShares, publicKey } = await dkls.refreshShares(wallet.keyshares);
+
+// Or via standalone import
+import { refreshShares } from '@bitshard.io/bitshard-sdk';
+const { newShares, publicKey } = await refreshShares(dkls, wallet.keyshares);
+
 // publicKey === wallet.publicKey  (same addresses, new secret material)
 ```
 
@@ -73,17 +81,20 @@ Recovery recreates lost shares using only `t` (threshold) surviving parties.
 The public key and all wallet addresses are preserved.
 
 ```typescript
-const dkls = sdk.getDKLSService();
-
 // Party 2 lost their share; parties 0 and 1 still have theirs
 const survivors = [wallet.keyshares[0], wallet.keyshares[1]];
 const lostPartyIds = [2];
 
-const { newShares, publicKey, recoveredPartyIds } =
-  await dkls.recoverShares(survivors, lostPartyIds);
+// Via SDK service
+const dkls = sdk.getDKLSService();
+const result = await dkls.recoverShares(survivors, lostPartyIds);
 
-// publicKey === wallet.publicKey
-// newShares has shares for all participants (survivors + recovered)
+// Or via standalone import
+import { recoverShares } from '@bitshard.io/bitshard-sdk';
+const result = await recoverShares(dkls, survivors, lostPartyIds);
+
+// result.publicKey === wallet.publicKey
+// result.newShares has shares for all participants (survivors + recovered)
 // Sign with the recovered shares as usual
 ```
 

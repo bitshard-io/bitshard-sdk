@@ -13,6 +13,7 @@ export * from './protocols/keygen';
 export * from './protocols/signing';
 export * from './protocols/presignature';
 export * from './protocols/refresh';
+export * from './protocols/recover';
 
 // Chain exports
 export * from './chains/config';
